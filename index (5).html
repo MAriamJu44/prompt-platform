@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>منصة Mariam.tech لهندسة الأوامر</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f8;--sf:#fff;--ink:#101b2d;--mu:#56627a;--ac:#0b5d8a;--aci:#fff;--hl:#b9791a;--ln:#d3dbe4;--ok:#17724a;--bd:#b23a2a;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1624;--sf:#162133;--ink:#e8eef6;--mu:#9aa8bd;--ac:#5fb4e6;--aci:#0b1626;--hl:#f0c04e;--ln:#2b3a50;--ok:#5ccb8c;--bd:#ef8a73;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1624;--sf:#162133;--ink:#e8eef6;--mu:#9aa8bd;--ac:#5fb4e6;--aci:#0b1626;--hl:#f0c04e;--ln:#2b3a50;--ok:#5ccb8c;--bd:#ef8a73;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.7 "IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 18px 56px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:8px 0 16px;border-bottom:1px solid var(--ln);margin-bottom:24px;font-size:15px}
+.top{flex-wrap:wrap;gap:8px}.top span:last-child{display:flex;gap:6px;flex-wrap:wrap}.brand{font-weight:700;direction:ltr}
+h1{font-size:clamp(25px,6vw,36px);line-height:1.4;margin:.2em 0 .4em;font-weight:700}
+h2{font-size:23px;margin:0 0 8px;line-height:1.4}
+p{margin:0 0 14px}
+.mu,.hint{color:var(--mu)}
+.hint{font-size:15px}
+.letters{display:flex;gap:8px;margin:26px 0;direction:ltr;justify-content:center}
+.letters b{flex:1;max-width:64px;aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--ac);color:var(--ac);font:700 28px/1 system-ui,sans-serif;border-radius:10px;background:var(--sf)}
+.card,.box{background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:20px}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--sf);border:1.5px solid var(--ln);border-radius:10px;padding:12px 14px}
+textarea{min-height:150px;resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.btn{font:inherit;font-weight:600;cursor:pointer;border:1.5px solid var(--ac);border-radius:10px;padding:11px 22px;background:var(--ac);color:var(--aci)}
+.btn.alt{background:transparent;color:var(--ac)}
+.btn.sm{padding:5px 14px;font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-top:18px}
+.opt{text-align:start;cursor:pointer;font:inherit;color:inherit;background:var(--sf);border:1.5px solid var(--ln);border-radius:12px;padding:20px}
+.opt:hover{border-color:var(--ac)}
+.opt strong{display:block;font-size:19px;margin-bottom:4px}
+.bar{height:8px;background:var(--ln);border-radius:99px;overflow:hidden;margin:6px 0 20px}
+.bar i{display:block;height:100%;background:var(--ac)}
+.out{white-space:pre-wrap;line-height:1.9}
+.res{display:grid;gap:10px;margin-top:16px}
+.item{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:14px}
+.item .l{font:700 22px/1 system-ui,sans-serif;display:grid;place-items:center;width:44px;height:44px;border-radius:10px;border:2px solid}
+.item.y .l{color:var(--ok)}
+.item.n .l{color:var(--bd)}
+.item .s{font-weight:600}
+.score{font-size:40px;font-weight:700;color:var(--hl);line-height:1.2}
+.err{margin-top:8px;min-height:1.5em;color:var(--bd)}
+.err.ok{color:var(--ok)}
+.qr{background:#fff;padding:14px;border-radius:12px;display:inline-block;margin-top:16px}
+.qr img,.qr canvas{display:block}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function(){
+var app=document.getElementById('app'),$=function(s){return document.querySelector(s)};
+var S={lang:'ar',name:'',seen:0,step:0,ans:{},theme:''},view,txt='',idx=0;
+try{var j=JSON.parse(localStorage.getItem('mt-state')||'{}');for(var k in j)S[k]=j[k]}catch(e){}
+function save(){try{localStorage.setItem('mt-state',JSON.stringify(S))}catch(e){}}
+function t(a,b){return S.lang==='ar'?a:b}
+function esc(x){return String(x).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function hasAns(){for(var k in S.ans)if(S.ans[k])return 1;return 0}
+var ST=[
+{t:['الدور','Character'],q:['ما الدور الذي تريد من الذكاء الاصطناعي أن يتقمصه؟','What role should the AI play?'],h:['مثال: خبير في الإدارة الحديثة، أو مدرّب لغة إنجليزية.','For example: a modern management expert or an English coach.'],ex:['أنت خبير في الإدارة الحديثة ويشرح ببساطة للمبتدئين','You are a modern management expert who explains things simply to beginners']},
+{t:['الطلب','Request'],q:['ما المهمة المطلوبة بوضوح؟','What exactly do you need done?'],h:['اكتب هدفًا واحدًا محددًا. هذه الخطوة مطلوبة.','Write one specific goal. This step is required.'],ex:['اكتب لي خطة أسبوعية لتنظيم وقتي أثناء الدراسة','Write me a weekly plan to organize my study time'],req:1},
+{t:['الأمثلة','Examples'],q:['هل لديك مثال يوضح ما تريده؟','Do you have an example of what you want?'],h:['نموذج قصير لنتيجة تعجبك يرفع الدقة كثيرًا.','A short sample of a result you like greatly improves accuracy.'],ex:['«الاثنين: ساعة رياضيات ثم ربع ساعة راحة»','“Monday: one hour of math, then a 15-minute break”']},
+{t:['التعديلات','Adjustments'],q:['ما القيود التي يجب الالتزام بها؟','Which constraints must be followed?'],h:['الطول، الأسلوب، اللغة، وما يجب تجنبه.','Length, tone, language, and what to avoid.'],ex:['لا تزد عن 200 كلمة، بأسلوب بسيط ومباشر','No more than 200 words, in a simple and direct tone']},
+{t:['نوع المخرجات','Type of output'],q:['ما الشكل الذي تريد أن تأتي به النتيجة؟','What format should the result take?'],h:['جدول، نقاط، فقرة، رسالة، تقرير…','A table, bullet points, a paragraph, an email, a report…'],ex:['على شكل جدول من ثلاثة أعمدة','As a table with three columns']},
+{t:['الإضافات','Extras'],q:['ما السياق والجمهور وأي معلومات إضافية؟','What is the context, the audience, and any extra information?'],h:['من سيقرأ النتيجة؟ وما الخلفية التي يجب معرفتها؟','Who will read the result? What background should the AI know?'],ex:['الجمهور طلاب جامعة لديهم ثلاث ساعات يوميًا للدراسة','The audience is university students with three hours a day to study']}
+];
+var L='CREATE';
+var LBa=['','المهمة','مثال','القيود','شكل المخرجات','السياق والجمهور'],LBe=['','Task','Example','Constraints','Output format','Context and audience'];
+var CK=[
+['C',['الدور','Character'],function(v){return /^\s*(أنت|بصفتك|تصرف|you are|act as|as an? )/i.test(v)||/(خبير|مدرب|مدرّب|expert|coach|tutor)/i.test(v.slice(0,70))},['ابدأ بدور واضح، مثل: «أنت خبير في…».','Start with a clear role, such as “You are an expert in…”.']],
+['R',['الطلب','Request'],function(v){return /(اكتب|أريد|اشرح|لخص|لخّص|حلل|حلّل|قارن|صمم|صمّم|أنشئ|ساعدني|أعطني|اقترح|المهمة|write|create|explain|summari|analy|compare|design|generate|list|plan)/i.test(v)&&v.split(/\s+/).length>=6},['اذكر المهمة بفعل واضح وموضوع محدد، مثل: «اكتب خطة أسبوعية لـ…».','State the task with a clear verb and a specific subject, like “Write a weekly plan for…”.']],
+['E',['الأمثلة','Examples'],function(v){return /(مثال|مثلاً|مثلا|نموذج|example|e\.g)\s*[:：\-–]?\s*\S+(\s+\S+){2,}/i.test(v)},['أضف مثالًا بعد كلمة «مثال:» ليرى الذكاء الاصطناعي ما تقصده.','Add a sample after the word “Example:” so the AI sees what you mean.']],
+['A',['التعديلات','Adjustments'],function(v){return /(\d+\s*(كلمة|كلمات|سطر|أسطر|نقاط|فقرات|words|lines|sentences|points|paragraphs))|(لا تستخدم|لا تزد|تجنب|تجنّب|بأسلوب|رسمي|بسيط|do not|avoid|tone|formal|simple|at most|no more than)/i.test(v)},['حدّد قيدًا قابلًا للقياس: عدد الكلمات أو الأسلوب أو ما يجب تجنبه.','Set a measurable limit: word count, tone, or what to avoid.']],
+['T',['نوع المخرجات','Type of output'],function(v){return /(جدول|نقاط|قائمة|فقرة|مقال|رسالة|إيميل|بريد|تقرير|عناوين|json|table|bullet|email|report|outline|paragraph)/i.test(v)},['اذكر الشكل المطلوب: جدول، نقاط، فقرة، رسالة…','Name the format you want: a table, bullets, a paragraph, an email…']],
+['E',['الإضافات','Extras'],function(v){return /(الجمهور|السياق|الخلفية|طلاب|لأن|الهدف|audience|context|background|because|goal|students|beginners)/i.test(v)},['أضف السياق: من الجمهور؟ وما الخلفية التي يحتاجها الذكاء الاصطناعي؟','Add context: who is the audience, and what background does the AI need?']]
+];
+function V(h){app.innerHTML=h;window.scrollTo(0,0)}
+function dark(){return S.theme?S.theme==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)}
+function hdr(){var b=(view==='home'||view==='login')?'':'<button class="btn alt sm" data-go="back">'+t('رجوع','Back')+'</button>';return '<div class="top"><span class="brand">Mariam.tech</span><span>'+b+'<button class="btn alt sm" data-go="home">'+t('الرئيسية','Home')+'</button><button class="btn alt sm" data-go="theme" aria-label="'+(dark()?t('مظهر فاتح','Light theme'):t('مظهر داكن','Dark theme'))+'">'+(dark()?'☀':'☾')+'</button><button class="btn alt sm" data-go="lang" aria-label="'+t('English','العربية')+'">'+t('EN','عربي')+'</button></span></div>'}
+function build(){var a=S.ans,p=[],LB=t(LBa,LBe);
+if(a[0])p.push(/^\s*(أنت|you are)/i.test(a[0])?a[0]:t('أنت ','You are ')+a[0]);
+for(var i=1;i<6;i++)if(a[i])p.push(LB[i]+': '+a[i]);
+return p.join('\n\n')}
+function login(){
+V(hdr()+'<h1>'+t('منصة <span dir="ltr">Mariam.tech</span> لهندسة الأوامر والإدارة الواعية للذكاء الاصطناعي','The <span dir="ltr">Mariam.tech</span> platform for prompt engineering and mindful AI management')+'</h1><p class="mu">'+t('النتيجة الجيدة تبدأ من إدارة جيدة للطلب.','A good result starts with a well-managed request.')+'</p><div class="letters" aria-hidden="true">'+L.split('').map(function(c){return'<b>'+c+'</b>'}).join('')+'</div><div class="card"><label for="nm"><strong>'+t('ما اسمك؟ (اختياري)','Your name (optional)')+'</strong></label><p class="hint">'+t('يُحفظ في متصفحك فقط.','Saved in your browser only.')+'</p><input id="nm" autocomplete="given-name" value="'+esc(S.name)+'"><div class="row"><button class="btn" id="go">'+t('ابدأ الآن','Start')+'</button></div></div>');
+$('#go').onclick=function(){S.name=$('#nm').value.trim();S.seen=1;save();nav('home')};
+$('#nm').onkeydown=function(e){if(e.key==='Enter')$('#go').click()};
+}
+function home(){
+var d=hasAns();
+V(hdr()+'<h2>'+t('أهلًا','Welcome')+(S.name?' '+esc(S.name):'')+'</h2><p class="mu">'+t('اختر ما تريد أن تفعله:','Choose what you would like to do:')+'</p><div class="grid"><button class="opt" data-go="build"><strong>'+(d?t('متابعة مسودتك','Continue your draft'):t('بناء أمر','Build a prompt'))+'</strong><span class="mu">'+(d?t('إجاباتك محفوظة، أكمل من حيث توقفت.','Your answers are saved. Pick up where you left off.'):t('ست خطوات وفق إطار CREATE تنتهي بأمر جاهز للنسخ.','Six steps based on the CREATE framework, ending in a prompt ready to copy.'))+'</span></button><button class="opt" data-go="eval"><strong>'+t('تقييم أمر','Evaluate a prompt')+'</strong><span class="mu">'+t('الصق أمرك ونقيّمه وفق معايير CREATE.','Paste your prompt and we check it against CREATE.')+'</span></button><button class="opt" data-go="qr"><strong>'+t('باركود المنصة','Platform QR code')+'</strong><span class="mu">'+t('اعرضه ليمسحه الآخرون ويفتحوا المنصة.','Show it so others can scan it and open the platform.')+'</span></button></div>');
+}
+function showStep(){
+var i=S.step,s=ST[i];
+V(hdr()+'<p class="hint">'+t('الخطوة '+(i+1)+' من 6','Step '+(i+1)+' of 6')+'</p><div class="bar"><i style="width:'+((i+1)/6*100)+'%"></i></div><h2><span dir="ltr">'+L[i]+'</span>: '+t(s.t[0],s.t[1])+'</h2><p>'+t(s.q[0],s.q[1])+'</p><textarea id="ta" placeholder="'+esc(t(s.ex[0],s.ex[1]))+'">'+esc(S.ans[i]||'')+'</textarea><p class="hint">'+t(s.h[0],s.h[1])+'</p><div class="err" id="er"></div><div class="row">'+(i?'<button class="btn alt" id="pv">'+t('السابق','Back')+'</button>':'')+'<button class="btn alt" id="exb">'+t('جرّب مثالًا','Try an example')+'</button><button class="btn" id="nx">'+(i===5?t('أنشئ الأمر','Create the prompt'):t('التالي','Next'))+'</button></div>');
+var ta=$('#ta');
+ta.oninput=function(){S.ans[i]=ta.value;save()};
+$('#exb').onclick=function(){ta.value=t(s.ex[0],s.ex[1]);S.ans[i]=ta.value;save();ta.focus()};
+if(i)$('#pv').onclick=function(){S.ans[i]=ta.value.trim();save();nav('step-'+i)};
+$('#nx').onclick=function(){var v=ta.value.trim();if(s.req&&!v){$('#er').textContent=t('هذه الخطوة مطلوبة: اكتب المهمة.','This step is required: write the task.');return}S.ans[i]=v;save();nav(i===5?'result':'step-'+(i+2))};
+}
+function result(){
+var d=build();
+V(hdr()+'<h2>'+t('أمرك جاهز','Your prompt is ready')+(S.name?' '+esc(S.name):'')+'</h2><div class="box out" id="op">'+esc(d)+'</div><div class="err" id="er"></div><div class="row"><button class="btn" id="cp">'+t('نسخ الأمر','Copy prompt')+'</button><button class="btn alt" id="ed">'+t('تعديل الإجابات','Edit answers')+'</button><button class="btn alt" id="ev">'+t('قيّم هذا الأمر','Evaluate this prompt')+'</button><button class="btn alt" id="rs">'+t('ابدأ من جديد','Start over')+'</button></div>');
+$('#cp').onclick=function(){var er=$('#er');function f(){var r=document.createRange();r.selectNodeContents($('#op'));var s=getSelection();s.removeAllRanges();s.addRange(r);er.className='err';er.textContent=t('تعذّر النسخ تلقائيًا. النص محدّد، انسخه يدويًا.','Automatic copy failed. The text is selected, so copy it manually.')}
+try{navigator.clipboard.writeText(d).then(function(){er.className='err ok';er.textContent=t('تم النسخ.','Copied.')},f)}catch(e){f()}};
+$('#ed').onclick=function(){nav('step-1')};
+$('#ev').onclick=function(){txt=d;nav('eval')};
+$('#rs').onclick=function(){if(confirm(t('سيتم حذف إجاباتك المحفوظة. متابعة؟','Your saved answers will be deleted. Continue?'))){S.ans={};save();nav('step-1')}};
+}
+function evalV(){
+V(hdr()+'<h2>'+t('تقييم أمر','Evaluate a prompt')+'</h2><p class="mu">'+t('الصق أمرك، وسنفحصه وفق عناصر CREATE الستة.','Paste your prompt and we will check it against the six CREATE elements.')+'</p><textarea id="ta" placeholder="'+t('الصق هنا…','Paste here…')+'">'+esc(txt)+'</textarea><div class="err" id="er"></div><div class="row"><button class="btn" id="ck">'+t('قيّم','Evaluate')+'</button></div><div id="rz"></div>');
+$('#ck').onclick=function(){
+var v=$('#ta').value.trim();txt=v;
+if(v.length<8){$('#er').textContent=t('الصق نصًا أطول لنقيّمه.','Paste a longer text so we can evaluate it.');$('#rz').innerHTML='';return}
+$('#er').textContent='';
+var r=CK.map(function(c){return{k:c[0],n:t(c[1][0],c[1][1]),tip:t(c[3][0],c[3][1]),ok:c[2](v)}});
+var sc=r.filter(function(x){return x.ok}).length;
+var vd=sc===6?t('ممتاز: أمرك مكتمل.','Excellent: your prompt is complete.'):sc>=4?t('جيد: ينقصه القليل.','Good: only a little is missing.'):t('يحتاج تطويرًا: أضف العناصر الناقصة.','Needs work: add the missing elements.');
+$('#rz').innerHTML='<div class="box" style="margin-top:18px"><div class="score"><span dir="ltr">'+sc+' / 6</span></div><div>'+vd+'</div></div><div class="res">'+r.map(function(x){return'<div class="item '+(x.ok?'y':'n')+'"><div class="l">'+x.k+'</div><div><div class="s">'+x.n+': '+(x.ok?t('موجود','Present'):t('ناقص','Missing'))+'</div>'+(x.ok?'':'<div class="hint">'+x.tip+'</div>')+'</div></div>'}).join('')+'</div><p class="hint" style="margin-top:14px">'+t('هذا تقييم تقريبي يعتمد على الكلمات الدالة وطول النص، وقد لا يلتقط كل صياغة.','This is an approximate check based on keywords and length, so it may miss some phrasings.')+'</p>';
+};
+if(txt)$('#ck').onclick();
+}
+function qr(){
+var u=String(location.href).split('#')[0];
+V(hdr()+'<h2>'+t('باركود المنصة','Platform QR code')+'</h2><p class="mu">'+t('عند مسح الباركود تفتح المنصة مباشرة. إن كان الرابط أدناه غير رابط المنصة المنشور، الصق الرابط الصحيح.','Scanning the code opens the platform directly. If the link below is not the published platform link, paste the correct one.')+'</p><label for="u"><strong>'+t('رابط المنصة','Platform link')+'</strong></label><input id="u" dir="ltr" value="'+esc(u)+'"><div class="qr" id="qr"></div><p class="hint">'+t('يمكنك التقاط صورة للشاشة أو طباعتها.','You can take a screenshot or print this page.')+'</p>');
+function mk(){var el=$('#qr');el.innerHTML='';try{new QRCode(el,{text:$('#u').value,width:220,height:220,colorDark:'#000000',colorLight:'#ffffff'})}catch(e){el.textContent=t('تعذّر إنشاء الباركود.','Could not create the QR code.')}}
+$('#u').oninput=mk;mk();
+}
+function render(){
+var r=document.documentElement;if(S.theme)r.setAttribute('data-theme',S.theme);else r.removeAttribute('data-theme');document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==='ar'?'rtl':'ltr';
+({login:login,home:home,step:showStep,result:result,eval:evalV,qr:qr})[view]();
+}
+app.onclick=function(e){var g=e.target.closest('[data-go]');if(!g)return;var d=g.dataset.go;
+if(d==='lang'){S.lang=S.lang==='ar'?'en':'ar';save();if(view==='eval'&&$('#ta'))txt=$('#ta').value;render()}
+else if(d==='theme'){S.theme=dark()?'light':'dark';save();render()}
+else if(d==='back'){if(idx>0)history.back();else nav('home')}
+else if(d==='build')nav('step-'+(S.step+1));
+else nav(d)};
+function route(){var h=location.hash.slice(1),m=/^step-([1-6])$/.exec(h);
+if(!S.seen)view='login';
+else if(m){S.step=+m[1]-1;save();view='step'}
+else view=({result:1,eval:1,qr:1})[h]?h:'home';
+render()}
+function nav(h){try{idx++;history.pushState({i:idx},'','#'+h);route()}catch(e){idx--;location.hash='#'+h}}
+window.addEventListener('popstate',function(e){idx=(e.state&&e.state.i)||0;route()});
+window.addEventListener('hashchange',route);
+try{history.replaceState({i:0},'',location.href)}catch(e){}
+route();
+})();
+</script>
+</body>
+</html>
